@@ -1,0 +1,8 @@
+PowerShellEditorServices.json
+
+.psmodules/
+
+result
+result-*
+
+*.jsonl
