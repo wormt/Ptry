@@ -17,10 +17,11 @@
             export PSModulePath="$PWD/.psmodules''${PSModulePath:+:$PSModulePath}"
             echo "  nix run .#demo   - run the resume demo"
             echo "  nix run .#lint   - PSScriptAnalyzer gate"
+            echo "  nix run .#test   - Pester mock tests"
           '';
         };
 
-        # nix run .#lint for script analyzer
+        # nix run .#lint
         apps.lint = {
           type = "app";
           meta.description = "PSScriptAnalyzer production-readiness gate for Ptry";
@@ -29,30 +30,12 @@
             runtimeInputs = [ pkgs.powershell ];
             text = ''
               export PSModulePath="$PWD/.psmodules''${PSModulePath:+:$PSModulePath}"
-              pwsh -NoProfile -Command '
-                if (-not (Get-Module -ListAvailable -Name PSScriptAnalyzer)) {
-                  Write-Information -MessageData "Installing PSScriptAnalyzer into ./.psmodules ..." -InformationAction Continue
-                  New-Item -ItemType Directory -Force -Path ./.psmodules | Out-Null
-                  Save-Module -Name PSScriptAnalyzer -Path ./.psmodules -Repository PSGallery
-                }
-                Import-Module PSScriptAnalyzer
-                $files = Get-ChildItem -Recurse -Include *.ps1,*.psm1,*.psd1 |
-                  Where-Object { $_.FullName -notmatch "[\\/]\.psmodules[\\/]" }
-                $findings = $files | ForEach-Object { Invoke-ScriptAnalyzer -Path $_.FullName -Settings ./PSScriptAnalyzerSettings.psd1 }
-                if ($findings) {
-                  $findings | Format-Table -AutoSize Severity, RuleName, ScriptName, Line, Message
-                }
-                if ($findings | Where-Object Severity -in "Error", "Warning") {
-                  Write-Error "PSScriptAnalyzer found Error/Warning findings."
-                  exit 1
-                }
-                Write-Information -MessageData "PSScriptAnalyzer: clean." -InformationAction Continue
-              '
+              pwsh -NoProfile -File "nix/lint-runner.ps1"
             '';
           });
         };
 
-        # nix run .#demo for test
+        # nix run .#demo
         apps.demo = {
           type = "app";
           meta.description = "Run the Ptry resume demo";
@@ -60,6 +43,20 @@
             name = "ptry-demo";
             runtimeInputs = [ pkgs.powershell ];
             text = ''pwsh -NoProfile -File ./examples/Run-Demo.ps1 "$@"'';
+          });
+        };
+
+        # nix run .#test
+        apps.test = {
+          type = "app";
+          meta.description = "run our Pester mock tests <3";
+          program = lib.getExe (pkgs.writeShellApplication {
+            name = "ptry-test";
+            runtimeInputs = [ pkgs.powershell ];
+            text = ''
+              export PSModulePath="$PWD/.psmodules''${PSModulePath:+:$PSModulePath}"
+              pwsh -NoProfile -File "nix/test-runner.ps1" "tests"
+            '';
           });
         };
       };
