@@ -6,8 +6,7 @@ function Invoke-Workflow {
 	.DESCRIPTION
 		Pipe steps in or pass -Step. A $WorkflowId is what makes a re-run resume rather
 		than repeat. Sequential workflows stop when there is a step error.
-		workflow (already journaled). -Parallel runs steps independently so steps must be
-		self-contained.
+		-Parallel runs steps independently so steps must be self-contained.
 	#>
 	[CmdletBinding(SupportsShouldProcess)]
 	[OutputType('PtryRecord')]
