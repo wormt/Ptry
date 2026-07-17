@@ -12,7 +12,7 @@
 
       perSystem = { pkgs, lib, ... }: {
         devShells.default = pkgs.mkShell {
-          packages = [ pkgs.powershell ];
+          packages = [ pkgs.powershell pkgs.just ];
           shellHook = ''
             export PSModulePath="$PWD/.psmodules''${PSModulePath:+:$PSModulePath}"
             echo "  nix run .#demo   - run the resume demo"
